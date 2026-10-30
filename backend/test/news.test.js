@@ -106,3 +106,18 @@ test('partial success survives later permission denial without leaking details t
     assert.ok(!JSON.stringify(service.read()).includes('Private project details'));
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+test('first deployment creates missing nested data directory and persists results', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bukhan-first-'));
+  const file = pathToFileURL(join(dir, 'missing', 'data', 'news.json'));
+  const fetcher = async url => ({ ok: true, json: async () => String(url).includes('naverapihub') ? { items: [item] } : ai });
+  try {
+    const service = createNewsService({ env, file, fetcher });
+    await service.refresh();
+    assert.equal(service.read().status, 'ready');
+    assert.equal(service.read().articles.length, 1);
+    const restarted = createNewsService({ env, file, fetcher });
+    await restarted.load();
+    assert.equal(restarted.read().articles.length, 1);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});

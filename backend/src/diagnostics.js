@@ -8,7 +8,7 @@ export function safeFailure(error) {
   const known = new Set(['NO_SUMMARIES', 'INVALID_NAVER_RESPONSE', 'INCOMPLETE_SUMMARY', 'INVALID_SUMMARY', 'INVALID_MODEL']);
   return {
     provider: ['naver', 'gemini'].includes(error?.provider) ? error.provider : 'pipeline',
-    code: Number.isInteger(error?.status) ? `HTTP_${error.status}` : error?.name === 'TimeoutError' ? 'TIMEOUT' : known.has(error?.message) ? error.message : 'REQUEST_OR_PROCESSING_FAILED',
+    code: ['ENOENT', 'EACCES', 'EPERM', 'ENOSPC', 'EROFS'].includes(error?.code) ? "STORAGE_" : Number.isInteger(error?.status) ? `HTTP_${error.status}` : error?.name === 'TimeoutError' ? 'TIMEOUT' : known.has(error?.message) ? error.message : 'REQUEST_OR_PROCESSING_FAILED',
     ...(error?.providerCode ? { providerCode: error.providerCode } : {}),
     ...(error?.safeMessage ? { message: error.safeMessage } : {}),
     ...(error?.safeReason ? { reason: error.safeReason } : {}),

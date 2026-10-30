@@ -26,7 +26,7 @@ export function createNewsService({ env, file, fetcher = fetch }) {
         }
         if (items.length && !articles.length) throw new Error('NO_SUMMARIES');
         const next = { articles, updatedAt: new Date().toISOString() };
-        await mkdir(new URL('../', file), { recursive: true });
+        await mkdir(new URL('./', file), { recursive: true });
         await writeFile(new URL(`${file.href}.tmp`), JSON.stringify(next), { mode: 0o600 });
         await rename(new URL(`${file.href}.tmp`), file);
         snapshot = next; failed = articles.length < items.length; if (!failed) lastFailure = null; console.info('News refresh completed', JSON.stringify({ count: articles.length, degraded: failed }));
