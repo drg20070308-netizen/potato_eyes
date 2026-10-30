@@ -1,7 +1,12 @@
 import LaunchScreen from './screens/LaunchScreen';
 import MissileAlerts from './components/MissileAlerts';
 import React, { useState } from 'react';
-import { View, Text, Pressable, StatusBar, Alert } from 'react-native';
+import { View, Pressable, StatusBar, Alert, ActivityIndicator } from 'react-native';
+import { Text } from './components/Typography';
+import { useFonts } from 'expo-font';
+import { NotoSansKR_400Regular } from '@expo-google-fonts/noto-sans-kr/400Regular';
+import { NotoSansKR_600SemiBold } from '@expo-google-fonts/noto-sans-kr/600SemiBold';
+import { NotoSansKR_700Bold } from '@expo-google-fonts/noto-sans-kr/700Bold';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import NewsScreen from './screens/NewsScreen';
@@ -20,6 +25,8 @@ const tabs = [
 export default function App() {
   const [showLaunch, setShowLaunch] = useState(true);
   const [currentTab, setCurrentTab] = useState('news');
+  const [fontsLoaded, fontError] = useFonts({ NotoSansKR_400Regular, NotoSansKR_600SemiBold, NotoSansKR_700Bold });
+  if (!fontsLoaded && !fontError) return <View style={[s.root, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={colors.accent} /></View>;
   return <SafeAreaProvider><SafeAreaView style={s.root}>
     <StatusBar barStyle="light-content" />
     <View style={s.header}><View><Text style={s.brand}>북한이</Text><Text style={s.caption}>북한 소식을 한눈에</Text></View>

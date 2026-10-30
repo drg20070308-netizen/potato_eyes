@@ -1,5 +1,6 @@
+import { Text } from '../components/Typography';
 import React, { useState } from 'react';
-import { ScrollView, Text, Pressable, View, Linking } from 'react-native';
+import { ScrollView, Pressable, View, Linking } from 'react-native';
 import { styles as s } from '../theme';
 const facts = [
   {
@@ -31,14 +32,14 @@ const items = [
 ];
 export default function InfoScreen() {
   const [open, setOpen] = useState(0);
-  return <ScrollView contentContainerStyle={s.page}><Text style={s.label}>ESSENTIAL GUIDE</Text><Text style={s.title}>기본 정보</Text><Text style={s.subtitle}>출처로 확인하는 북한 정보와 안전 가이드</Text>
+  return <ScrollView contentContainerStyle={s.page}><Text style={s.label}>ESSENTIAL GUIDE</Text><Text style={s.title}>기본 정보</Text>
     {facts.map(section => <View key={section.title} style={s.card}>
-      <Text style={s.heading}>{section.title}</Text>
-      {section.lines.map((line, index) => <Text key={index} style={s.subtitle}>{index + 1}. {line}</Text>)}
-      <Text style={s.caption}>{section.basis}</Text>
-      {section.sources.map(source => <Pressable key={source.url} accessibilityRole="link" onPress={() => Linking.openURL(source.url).catch(() => {})}><Text style={s.label}>{source.label} ↗</Text></Pressable>)}
+      <Text style={s.cardHeading}>{section.title}</Text>
+      {section.lines.map((line, index) => <Text variant="default" key={index} style={s.cardSubtitle}>{index + 1}. {line}</Text>)}
+      <Text variant="default" style={s.cardCaption}>{section.basis}</Text>
+      {section.sources.map(source => <Pressable key={source.url} accessibilityRole="link" onPress={() => Linking.openURL(source.url).catch(() => {})}><Text variant="default" style={s.cardLabel}>{source.label} ↗</Text></Pressable>)}
     </View>)}
-    {items.map(([title, body], i) => <Pressable key={title} accessibilityRole="button" accessibilityState={{ expanded: open === i }} onPress={() => setOpen(open === i ? null : i)} style={s.card}><Text style={s.heading}>{title} {open === i ? '−' : '+'}</Text>{open === i && <Text style={s.subtitle}>{body}</Text>}</Pressable>)}<Text style={[s.caption, { textAlign: 'center' }]}>북한이 · VERSION 1.0.0</Text>
+    {items.map(([title, body], i) => <Pressable key={title} accessibilityRole="button" accessibilityState={{ expanded: open === i }} onPress={() => setOpen(open === i ? null : i)} style={s.card}><Text style={s.cardHeading}>{title} {open === i ? '−' : '+'}</Text>{open === i && <Text variant="default" style={s.cardSubtitle}>{body}</Text>}</Pressable>)}<Text variant="default" style={[s.caption, { textAlign: 'center' }]}>북한이 · VERSION 1.0.0</Text>
   </ScrollView>;
 }
 
