@@ -1,3 +1,4 @@
+import LaunchScreen from './screens/LaunchScreen';
 import MissileAlerts from './components/MissileAlerts';
 import React, { useState } from 'react';
 import { View, Text, Pressable, StatusBar, Alert } from 'react-native';
@@ -17,6 +18,7 @@ const tabs = [
 ];
 
 export default function App() {
+  const [showLaunch, setShowLaunch] = useState(true);
   const [currentTab, setCurrentTab] = useState('news');
   return <SafeAreaProvider><SafeAreaView style={s.root}>
     <StatusBar barStyle="light-content" />
@@ -26,6 +28,7 @@ export default function App() {
     <View style={s.tabs}>{tabs.map(tab => <Pressable key={tab.id} accessibilityRole="tab" accessibilityState={{ selected: currentTab === tab.id }} accessibilityLabel={tab.label} onPress={() => setCurrentTab(tab.id)} style={s.tab}>
       <Ionicons name={tab.icon} size={23} color={currentTab === tab.id ? colors.accent : colors.muted} /><Text style={[s.tabLabel, { color: currentTab === tab.id ? colors.accent : colors.muted }]}>{tab.label}</Text>
     </Pressable>)}</View>
+    {showLaunch && <LaunchScreen onFinish={() => setShowLaunch(false)} />}
   </SafeAreaView></SafeAreaProvider>;
 }
 

@@ -1,3 +1,4 @@
+import { requestWithRetry } from './retry.js';
 import { redact } from './diagnostics.js';
 import { createHash } from 'node:crypto';
 const publishers = { 'yna.co.kr': '연합뉴스', 'yonhapnews.co.kr': '연합뉴스', 'kbs.co.kr': 'KBS', 'imbc.com': 'MBC', 'sbs.co.kr': 'SBS', 'ytn.co.kr': 'YTN', 'newsis.com': '뉴시스', 'news1.kr': '뉴스1', 'hani.co.kr': '한겨레', 'chosun.com': '조선일보', 'donga.com': '동아일보', 'joongang.co.kr': '중앙일보', 'khan.co.kr': '경향신문', 'nknews.org': 'NK News' };
@@ -24,7 +25,7 @@ export async function fetchJson(url, options = {}, fetcher = fetch) {
   const provider = new URL(url).hostname === 'generativelanguage.googleapis.com' ? 'gemini' : 'naver';
   const secrets = Object.entries(options.headers ?? {}).filter(([key]) => /key|secret|authorization|client-id/i.test(key)).map(([, value]) => String(value));
   let response;
-  try { response = await fetcher(url, { ...options, signal: AbortSignal.timeout(30000) }); }
+  try { response = await requestWithRetry(url, options, fetcher); }
   catch (error) { error.provider = provider; throw error; }
   if (!response.ok) {
     const error = new Error('UPSTREAM_ERROR');
