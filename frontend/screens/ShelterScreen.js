@@ -1,5 +1,6 @@
+import { Text, TextInput } from '../components/Typography';
 import React, { useEffect, useRef, useState } from 'react';
-import { ScrollView, View, Text, TextInput, Pressable, ActivityIndicator, Linking, Platform } from 'react-native';
+import { ScrollView, View, Pressable, ActivityIndicator, Linking, Platform } from 'react-native';
 import { colors, styles as s } from '../theme';
 import { readPosition, locationFailure } from '../shelterLocation.mjs';
 const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'https://potato-eyes.onrender.com';
@@ -54,25 +55,24 @@ export default function ShelterScreen() {
     <Text style={s.label}>SHELTER FINDER</Text><Text style={s.title}>대피소 찾기</Text>
     <Text style={s.subtitle}>지역명으로 민방위 대피소를 검색하고 이동 경로를 확인하세요.</Text>
     <View style={s.card}>
-      <Text style={s.heading}>어디에서 찾으시나요?</Text>
-      <TextInput accessibilityLabel="대피소 검색 지역" placeholder="예: 서울 강남구 역삼동" placeholderTextColor={colors.muted} value={region} onChangeText={setRegion} maxLength={80} returnKeyType="search" onSubmitEditing={() => !busy && search()} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 14 }} />
-      <Pressable accessibilityRole="button" disabled={busy} style={s.chip} onPress={() => search()}><Text style={s.label}>지역 검색</Text></Pressable>
-      <Pressable accessibilityRole="button" disabled={busy} style={s.chip} onPress={() => search(null, radius, undefined, 'nearby')}><Text style={s.label}>입력 지역 주변 반경 검색</Text></Pressable>
-      <Pressable accessibilityRole="button" disabled={busy} style={s.chip} onPress={locate}><Text style={s.label}>◎ 내 위치 주변 검색 · 웹</Text></Pressable>
-      <Text style={s.caption}>현재 위치는 버튼을 누를 때만 요청하며 서버에 저장하지 않습니다.</Text>
-      <Text style={s.caption}>반경: 입력 지역 주변 반경 검색 / 내 위치 주변 검색에 적용됩니다. 지역 검색은 해당 구·동 안만 찾습니다.</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{[1000, 3000, 5000, 10000, 20000].map(value => <Pressable accessibilityRole="button" accessibilityState={{ selected: radius === value }} key={value} disabled={busy} onPress={() => { setRadius(value); if (coords) search(coords, value); else if (data && searchMode === 'nearby') search(null, value, undefined, 'nearby'); }} style={[s.chip, radius === value && { borderColor: colors.accent }]}><Text style={s.label}>{value / 1000}km</Text></Pressable>)}</View>
+      <Text style={s.cardHeading}>어디에서 찾으시나요?</Text>
+      <TextInput accessibilityLabel="대피소 검색 지역" placeholder="예: 서울 강남구 역삼동" placeholderTextColor={colors.cardMuted} value={region} onChangeText={setRegion} maxLength={80} returnKeyType="search" onSubmitEditing={() => !busy && search()} style={{ color: colors.cardText, backgroundColor: colors.card, borderWidth: 1.5, borderColor: colors.cardBorder, borderRadius: 12, padding: 14 }} />
+      <Pressable accessibilityRole="button" disabled={busy} style={s.chip} onPress={() => search()}><Text style={s.cardLabel}>지역 검색</Text></Pressable>
+      <Pressable accessibilityRole="button" disabled={busy} style={s.chip} onPress={() => search(null, radius, undefined, 'nearby')}><Text style={s.cardLabel}>입력 지역 주변 반경 검색</Text></Pressable>
+      <Pressable accessibilityRole="button" disabled={busy} style={s.chip} onPress={locate}><Text style={s.cardLabel}>◎ 내 위치 주변 검색 · 웹</Text></Pressable>
+      <Text style={s.cardCaption}>반경: 입력 지역 주변 반경 검색 / 내 위치 주변 검색에 적용됩니다. 지역 검색은 해당 구·동 안만 찾습니다.</Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{[1000, 3000, 5000, 10000, 20000].map(value => <Pressable accessibilityRole="button" accessibilityState={{ selected: radius === value }} key={value} disabled={busy} onPress={() => { setRadius(value); if (coords) search(coords, value); else if (data && searchMode === 'nearby') search(null, value, undefined, 'nearby'); }} style={[s.chip, radius === value && { borderColor: colors.cardAccent }]}><Text variant="default" style={s.cardLabel}>{value / 1000}km</Text></Pressable>)}</View>
     </View>
     <Text style={s.caption}>행정안전부 전국 민방위 대피시설 공개자료를 검색합니다. 사용 중 시설만 포함하며, 실시간 개방·수용 여유는 시설에 확인하세요. 거리는 직선거리입니다.</Text>
     {busy && <View accessibilityLiveRegion="polite"><ActivityIndicator color={colors.accent} /><Text style={s.subtitle}>{locating ? '현재 위치 확인 중…' : '대피소 검색 중…'}</Text></View>}
     {!!error && <Text accessibilityRole="alert" style={s.subtitle}>{error}</Text>}
     {data?.coverage && <Text style={s.caption}>{data.coverage}</Text>}
-    {data?.center && <Text style={s.caption}>검색 중심 · {data.center.label} / 반경 {data.center.radius / 1000}km</Text>}
+    {data?.center && <Text variant="default" style={s.caption}>검색 중심 · {data.center.label} / 반경 {data.center.radius / 1000}km</Text>}
     {data?.coordinateMissing > 0 && <Text style={s.caption}>좌표 미확인 시설 {data.coordinateMissing}곳 · 반경 검색에서는 제외됩니다.</Text>}
     {data && <Text style={s.label}>검색 결과 {data.shelters.length}곳{data.hasMore ? ' · 일부 결과, 지역을 더 구체적으로 입력해 주세요' : ''}</Text>}
     {data && !data.shelters.length && <Text style={s.subtitle}>검색 결과가 없습니다. 다른 지역명이나 더 넓은 반경으로 검색해 주세요. 결과가 없더라도 주변에 대피소가 없다는 뜻은 아닙니다.</Text>}
-    {active && <View style={s.card}><Text style={s.label}>선택한 시설</Text><Text style={s.heading}>{active.name}</Text><Text style={s.subtitle}>{active.address}</Text><Pressable accessibilityRole="link" onPress={() => open((active.lat != null && active.lng != null ? `https://map.kakao.com/link/map/${encodeURIComponent(active.name)},${active.lat},${active.lng}` : active.mapUrl || `https://map.kakao.com/link/search/${encodeURIComponent(active.name + ' ' + active.address)}`))} style={s.chip}><Text style={s.label}>지도에서 위치 보기 ↗</Text></Pressable><Pressable accessibilityRole="link" onPress={() => open((active.lat != null && active.lng != null ? `https://map.kakao.com/link/to/${encodeURIComponent(active.name)},${active.lat},${active.lng}` : active.mapUrl || `https://map.kakao.com/link/search/${encodeURIComponent(active.name + ' ' + active.address)}`))} style={s.chip}><Text style={s.label}>카카오맵 길찾기 ↗</Text></Pressable></View>}
-    {data?.shelters.map(item => <Pressable key={item.id} accessibilityRole="button" accessibilityState={{ selected: selected === item.id }} onPress={() => setSelected(item.id)} style={[s.card, selected === item.id && { borderColor: colors.accent }]}><Text style={s.heading}>{item.name}</Text><Text style={s.subtitle}>{item.address}</Text><Text style={s.label}>{item.distance == null ? '지역명 검색 · 거리 미제공' : item.distance < 1000 ? `직선거리 ${item.distance}m` : `직선거리 ${(item.distance / 1000).toFixed(1)}km`}</Text>{!!item.phone && <Text style={s.caption}>시설 연락처 · {item.phone}</Text>}</Pressable>)}
+    {active && <View style={s.card}><Text style={s.cardLabel}>선택한 시설</Text><Text style={s.cardHeading}>{active.name}</Text><Text style={s.cardSubtitle}>{active.address}</Text><Pressable accessibilityRole="link" onPress={() => open((active.lat != null && active.lng != null ? `https://map.kakao.com/link/map/${encodeURIComponent(active.name)},${active.lat},${active.lng}` : active.mapUrl || `https://map.kakao.com/link/search/${encodeURIComponent(active.name + ' ' + active.address)}`))} style={s.chip}><Text style={s.cardLabel}>지도에서 위치 보기 ↗</Text></Pressable><Pressable accessibilityRole="link" onPress={() => open((active.lat != null && active.lng != null ? `https://map.kakao.com/link/to/${encodeURIComponent(active.name)},${active.lat},${active.lng}` : active.mapUrl || `https://map.kakao.com/link/search/${encodeURIComponent(active.name + ' ' + active.address)}`))} style={s.chip}><Text style={s.cardLabel}>카카오맵 길찾기 ↗</Text></Pressable></View>}
+    {data?.shelters.map(item => <Pressable key={item.id} accessibilityRole="button" accessibilityState={{ selected: selected === item.id }} onPress={() => setSelected(item.id)} style={[s.card, selected === item.id && { borderColor: colors.cardAccent }]}><Text style={s.cardHeading}>{item.name}</Text><Text style={s.cardSubtitle}>{item.address}</Text><Text variant="default" style={s.cardLabel}>{item.distance == null ? '지역명 검색 · 거리 미제공' : item.distance < 1000 ? `직선거리 ${item.distance}m` : `직선거리 ${(item.distance / 1000).toFixed(1)}km`}</Text>{!!item.phone && <Text style={s.cardCaption}>시설 연락처 · {item.phone}</Text>}</Pressable>)}
     {data && <Text style={s.caption}>출처 · {data.source} / 조회 {new Date(data.checkedAt).toLocaleString('ko-KR')}</Text>}
   </ScrollView>;
 }
