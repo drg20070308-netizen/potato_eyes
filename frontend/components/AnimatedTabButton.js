@@ -30,11 +30,12 @@ export default function AnimatedTabButton({ label, icon, selected, onPress }) {
     Animated.spring(scale, { toValue: 1, speed: 20, bounciness: 9, useNativeDriver: false }).start();
   };
   const color = selected ? colors.accent : colors.muted;
+  const iconName = selected ? icon.replace(/-outline$/, '') : icon;
   return <Pressable accessibilityRole="tab" accessibilityState={{ selected }} accessibilityLabel={label}
     onPressIn={pressIn} onPressOut={release} onPress={() => { release(); onPress(); }}
     style={{ flex: 1, minHeight: 44 }}>
     <Animated.View pointerEvents="none" style={[s.tab, { transform: [{ scale }] }]}>
-      <Ionicons name={icon} size={23} color={color} />
+      <Ionicons name={iconName} size={23} color={color} />
       <Text style={[s.tabLabel, { color }]}>{label}</Text>
     </Animated.View>
   </Pressable>;
