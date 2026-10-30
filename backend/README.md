@@ -3,7 +3,7 @@
 Node.js 22 이상. 별도 npm 패키지 설치 없이 실행합니다.
 
 1. `.env.example`을 `.env`로 복사합니다.
-2. NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, GEMINI_API_KEY를 입력합니다. 네이버 개발자센터에서 검색 API 사용 권한이 필요합니다. Gemini 무료 한도는 계정/모델별로 다릅니다. 결제를 연결하지 않은 무료 프로젝트를 사용하세요.
+2. NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, GEMINI_API_KEY를 입력합니다. 네이버 클라우드 NAVER API HUB에서 뉴스 API 사용 권한이 필요합니다. Gemini 무료 한도는 계정/모델별로 다릅니다. 결제를 연결하지 않은 무료 프로젝트를 사용하세요.
 3. backend 폴더에서 `npm.cmd start`를 실행합니다. 테스트는 `npm.cmd test`입니다.
 
 GET /api/news: articles(id, title, summaryLines[2~3], source, originalUrl, publishedAt, summaryBasis), updatedAt, stale, status.
@@ -24,3 +24,4 @@ Google AI Studio https://aistudio.google.com/apikey 에서 키를 생성합니�
 Render Environment에서 GEMINI_API_KEY에 키를 입력하고 GEMINI_MODEL=gemini-2.5-flash-lite, REFRESH_MINUTES=60을 설정하세요. OPENAI_API_KEY와 OPENAI_MODEL은 삭제합니다. NAVER 설정은 유지합니다.
 수정 코드를 GitHub에 올리고 Save, rebuild, and deploy로 재배포합니다. 실제 키를 이용한 검증은 배포 후 /api/news 응답으로 확인합니다.
 무료 한도 초과(429) 시 호출을 중단하며 저장된 뉴스가 있으면 유지합니다. 무료 티어에서 전송 자료가 제품 개선에 사용될 수 있으므로 공개 기사 제목과 검색 설명만 보냅니다.
+오류 진단: Render Logs에는 provider, HTTP 코드, 제공자가 반환한 message와 reason을 기록합니다. 요청에 사용한 키와 URL은 가립니다. 공개 /api/news에는 상세 메시지 대신 provider/code만 전달합니다. 403은 API 접근 권한 문제로, 결제 필요 여부를 코드만으로 단정하지 마세요. 이전 OpenAI 호출 코드는 사용하지 않습니다.

@@ -1,3 +1,4 @@
+import { redact } from './diagnostics.js';
 import { createHash } from 'node:crypto';
 const publishers = { 'yna.co.kr': '연합뉴스', 'yonhapnews.co.kr': '연합뉴스', 'kbs.co.kr': 'KBS', 'imbc.com': 'MBC', 'sbs.co.kr': 'SBS', 'ytn.co.kr': 'YTN', 'newsis.com': '뉴시스', 'news1.kr': '뉴스1', 'hani.co.kr': '한겨레', 'chosun.com': '조선일보', 'donga.com': '동아일보', 'joongang.co.kr': '중앙일보', 'khan.co.kr': '경향신문', 'nknews.org': 'NK News' };
 export function clean(value) {
@@ -20,18 +21,25 @@ export function normalize(item) {
   return { id: createHash('sha256').update(url.href).digest('hex').slice(0, 24), title, description, originalUrl: url.href, source, publishedAt: new Date(item.pubDate).toISOString() };
 }
 export async function fetchJson(url, options = {}, fetcher = fetch) {
-  const response = await fetcher(url, { ...options, signal: AbortSignal.timeout(30000) });
+  const provider = new URL(url).hostname === 'generativelanguage.googleapis.com' ? 'gemini' : 'naver';
+  const secrets = Object.entries(options.headers ?? {}).filter(([key]) => /key|secret|authorization|client-id/i.test(key)).map(([, value]) => String(value));
+  let response;
+  try { response = await fetcher(url, { ...options, signal: AbortSignal.timeout(30000) }); }
+  catch (error) { error.provider = provider; throw error; }
   if (!response.ok) {
     const error = new Error('UPSTREAM_ERROR');
     error.status = response.status;
-    error.provider = new URL(url).hostname === 'generativelanguage.googleapis.com' ? 'gemini' : 'naver';
+    error.provider = provider;
     const body = await response.json().catch(() => ({}));
     const code = body.error?.status ?? body.error?.code ?? body.errorCode ?? body.code;
     const allowed = new Set(['insufficient_quota', 'invalid_api_key', 'model_not_found', 'rate_limit_exceeded', 'invalid_json_schema', 'unsupported_parameter', 'invalid_value', 'authentication_error', 'RESOURCE_EXHAUSTED', 'PERMISSION_DENIED', 'UNAUTHENTICATED', 'INVALID_ARGUMENT', 'NOT_FOUND']);
     if (allowed.has(code)) error.providerCode = code;
+    error.safeMessage = redact(body.error?.message ?? body.errorMessage ?? '', secrets);
+    const reason = body.error?.details?.find(detail => typeof detail.reason === 'string')?.reason;
+    if (reason) error.safeReason = redact(reason, secrets);
     throw error;
   }
-  return response.json();
+  try { return await response.json(); } catch (error) { error.provider = provider; throw error; }
 }
 export async function collect(env, fetcher = fetch) {
   const url = new URL('https://naverapihub.apigw.ntruss.com/search/v1/news');
@@ -59,4 +67,3 @@ export async function summarize(article, env, fetcher = fetch) {
   return lines.map(x => x.trim());
 }
 export function fingerprint(article, model) { return createHash('sha256').update(JSON.stringify([article.title, article.description, model, 'v1'])).digest('hex'); }
-

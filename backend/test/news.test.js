@@ -69,6 +69,40 @@ test('Gemini request uses server key, structured output and rejects blocked resu
   assert.equal(result.length, 2);
   await assert.rejects(summarize(normalize(item), env, async () => ({ ok: true, json: async () => ({ candidates: [{ finishReason: 'SAFETY' }] }) })));
   await assert.rejects(summarize(normalize(item), env, async () => ({ ok: false, status: 429, json: async () => ({ error: { status: 'RESOURCE_EXHAUSTED', message: 'secret' } }) })), error => {
-    assert.deepEqual(safeFailure(error), { provider: 'gemini', code: 'HTTP_429', providerCode: 'RESOURCE_EXHAUSTED' }); return true;
+    assert.deepEqual(safeFailure(error), { provider: 'gemini', code: 'HTTP_429', providerCode: 'RESOURCE_EXHAUSTED', message: 'secret' }); return true;
   });
+});
+
+test('403 provider details retain cause but redact header keys and URLs', async () => {
+  const key = 'AIza-private-gemini-key';
+  await assert.rejects(summarize(normalize(item), { GEMINI_API_KEY: key }, async () => ({
+    ok: false, status: 403, json: async () => ({ error: {
+      status: 'PERMISSION_DENIED', message: `API access denied for ${key}. See https://example.com/?key=${key}`,
+      details: [{ reason: 'API_KEY_SERVICE_BLOCKED' }],
+    } }),
+  })), error => {
+    const diagnostic = safeFailure(error);
+    assert.equal(diagnostic.reason, 'API_KEY_SERVICE_BLOCKED');
+    assert.match(diagnostic.message, /API access denied/);
+    assert.ok(!JSON.stringify(diagnostic).includes(key));
+    assert.ok(!JSON.stringify(diagnostic).includes('https://'));
+    return true;
+  });
+});
+test('partial success survives later permission denial without leaking details to API', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bukhan-partial-'));
+  let calls = 0;
+  const fetcher = async url => {
+    if (String(url).includes('naverapihub')) return { ok: true, json: async () => ({ items: [item, { ...item, originallink: 'https://www.yna.co.kr/view/456' }] }) };
+    if (++calls === 1) return { ok: true, json: async () => ai };
+    return { ok: false, status: 403, json: async () => ({ error: { status: 'PERMISSION_DENIED', message: 'Private project details' } }) };
+  };
+  try {
+    const service = createNewsService({ env: { ...env, GEMINI_API_KEY: ' test ' }, file: pathToFileURL(join(dir, 'news.json')), fetcher });
+    await service.refresh();
+    assert.equal(service.read().articles.length, 1);
+    assert.equal(service.read().status, 'degraded');
+    assert.equal(service.read().failure.provider, 'gemini');
+    assert.ok(!JSON.stringify(service.read()).includes('Private project details'));
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });
