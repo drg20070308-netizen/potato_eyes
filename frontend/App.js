@@ -26,9 +26,9 @@ const tabs = [
 export default function App() {
   const [showLaunch, setShowLaunch] = useState(true);
   const [currentTab, setCurrentTab] = useState('news');
-  const [fontsLoaded, fontError] = useFonts({ NotoSerifKR_400Regular, NotoSansKR_400Regular, NotoSansKR_600SemiBold, NotoSansKR_700Bold });
+  const [fontsLoaded, fontError] = useFonts({ ...Ionicons.font, NotoSerifKR_400Regular, NotoSansKR_400Regular, NotoSansKR_600SemiBold, NotoSansKR_700Bold });
   if (!fontsLoaded && !fontError) return <View style={[s.root, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={colors.accent} /></View>;
-  return <SafeAreaProvider><SafeAreaView style={s.root}>
+  return <SafeAreaProvider><View style={s.root}><SafeAreaView style={s.root} accessibilityElementsHidden={showLaunch} importantForAccessibility={showLaunch ? 'no-hide-descendants' : 'auto'}>
     <StatusBar barStyle="light-content" />
     <View style={s.header}><View><Text style={s.brand}>북한이</Text><Text style={s.caption}>북한 소식을 한눈에</Text></View>
       <MissileAlerts /></View>
@@ -36,7 +36,8 @@ export default function App() {
     <View style={s.tabs}>{tabs.map(tab => <Pressable key={tab.id} accessibilityRole="tab" accessibilityState={{ selected: currentTab === tab.id }} accessibilityLabel={tab.label} onPress={() => setCurrentTab(tab.id)} style={s.tab}>
       <Ionicons name={tab.icon} size={23} color={currentTab === tab.id ? colors.accent : colors.muted} /><Text style={[s.tabLabel, { color: currentTab === tab.id ? colors.accent : colors.muted }]}>{tab.label}</Text>
     </Pressable>)}</View>
+  </SafeAreaView>
     {showLaunch && <LaunchScreen onFinish={() => setShowLaunch(false)} />}
-  </SafeAreaView></SafeAreaProvider>;
+  </View></SafeAreaProvider>;
 }
 
