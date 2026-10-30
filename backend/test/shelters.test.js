@@ -26,7 +26,7 @@ test('nearby query applies provider radius, distance order, normalizes and omits
 test('regional results do not invent distances', async () => {
   const search = createShelterService({ env: { KAKAO_REST_API_KEY: 'secret' }, fetcher: async url => {
     assert.equal(url.searchParams.get('query'), '서울 민방위대피소'); assert.equal(url.searchParams.has('x'), false);
-    return { ok: true, json: async () => ({ meta: { is_end: true }, documents: [{ id: '1', x: '127', y: '37', distance: '' }] }) };
+    return { ok: true, json: async () => ({ meta: { is_end: true }, documents: [{ id: '1', x: '127', y: '37', distance: '', address_name: '서울 강남구 역삼동' }] }) };
   } });
   assert.equal((await search(params('region=서울'))).body.shelters[0].distance, null);
 });
@@ -42,4 +42,35 @@ test('disabled Kakao map service is distinguishable from invalid credentials', a
   assert.equal((await search(params('region=서울'))).body.error, 'PROVIDER_DISABLED');
   const denied = createShelterService({ env: { KAKAO_REST_API_KEY: 'secret' }, fetcher: async () => ({ ok: false, status: 401 }) });
   assert.equal((await denied(params('region=서울'))).body.error, 'PROVIDER_UNAUTHORIZED');
+});
+
+
+import { matchesRegion } from '../src/shelter-region.js';
+test('district names match whole address tokens, not neighboring districts', () => {
+  assert.equal(matchesRegion('사상구', ['부산 사상구 덕포동 12']), true);
+  assert.equal(matchesRegion('사상구', ['부산 중구 영주동 51']), false);
+  assert.equal(matchesRegion('부산광역시 사상구', ['부산 사상구 덕포동']), true);
+  assert.equal(matchesRegion('덕포동', ['부산 사상구 덕포1동']), false);
+});
+test('dong search broadens provider query but filters by land-lot dong', async () => {
+  const search = createShelterService({ env: { KAKAO_REST_API_KEY: 'test' }, fetcher: async url => {
+    const documents = url.pathname.includes('/address.json') ? [{ address_name: '부산 사상구 덕포동', address: { region_1depth_name: '부산', region_2depth_name: '사상구', region_3depth_name: '덕포동' } }] : [
+      { id: '1', x: '129', y: '35', address_name: '부산 사상구 덕포동 1', road_address_name: '부산 사상구 사상로 2' },
+      { id: '2', x: '129', y: '35', address_name: '부산 사상구 모라동 2' },
+      { id: '3', x: '129', y: '35', address_name: '부산 북구 구포동 3' },
+    ];
+    return { ok: true, json: async () => ({ documents, meta: { is_end: true } }) };
+  } });
+  const result = await search(params('region=부산 사상구 덕포동'));
+  assert.equal(result.code, 200); assert.deepEqual(result.body.shelters.map(s => s.id), ['1']);
+});
+test('administrative dong reverse lookup excludes facilities in another dong', async () => {
+  const search = createShelterService({ env: { KAKAO_REST_API_KEY: 'test' }, fetcher: async url => {
+    let documents;
+    if (url.pathname.includes('address.json')) documents = [];
+    else if (url.pathname.includes('coord2regioncode')) documents = [{ address_name: url.searchParams.get('x') === '129' ? '부산 사상구 덕포1동' : '부산 사상구 덕포2동' }];
+    else documents = [{ id: '1', x: '129', y: '35', address_name: '부산 사상구 덕포동' }, { id: '2', x: '129.1', y: '35', address_name: '부산 사상구 덕포동' }];
+    return { ok: true, json: async () => ({ documents, meta: { is_end: true } }) };
+  } });
+  assert.deepEqual((await search(params('region=부산 사상구 덕포1동'))).body.shelters.map(s => s.id), ['1']);
 });

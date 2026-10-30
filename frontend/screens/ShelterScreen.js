@@ -3,7 +3,7 @@ import { ScrollView, View, Text, TextInput, Pressable, ActivityIndicator, Linkin
 import { colors, styles as s } from '../theme';
 import { readPosition, locationFailure } from '../shelterLocation.mjs';
 const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'https://potato-eyes.onrender.com';
-const messages = { NOT_CONFIGURED: '서버에 KAKAO_REST_API_KEY 설정이 필요합니다.', INVALID_QUERY: '지역명 또는 대한민국 내 위치를 확인해 주세요.', PROVIDER_LIMIT: '검색 제공자의 호출 한도를 초과했습니다. 잠시 후 재시도해 주세요.', PROVIDER_DISABLED: '카카오맵 API가 비활성화되어 있습니다. 카카오 Developers에서 앱 → 제품 설정 → 카카오맵 → 활성화 설정을 ON으로 변경해 주세요.', PROVIDER_UNAUTHORIZED: '서버의 카카오 REST API 키 또는 API 사용 권한을 확인해 주세요.', PROVIDER_UNAVAILABLE: '카카오 검색 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.' };
+const messages = { AMBIGUOUS_REGION: '같은 이름의 지역이 여러 곳입니다. 시·구·동을 함께 입력해 주세요.', NOT_CONFIGURED: '서버에 KAKAO_REST_API_KEY 설정이 필요합니다.', INVALID_QUERY: '지역명 또는 대한민국 내 위치를 확인해 주세요.', PROVIDER_LIMIT: '검색 제공자의 호출 한도를 초과했습니다. 잠시 후 재시도해 주세요.', PROVIDER_DISABLED: '카카오맵 API가 비활성화되어 있습니다. 카카오 Developers에서 앱 → 제품 설정 → 카카오맵 → 활성화 설정을 ON으로 변경해 주세요.', PROVIDER_UNAUTHORIZED: '서버의 카카오 REST API 키 또는 API 사용 권한을 확인해 주세요.', PROVIDER_UNAVAILABLE: '카카오 검색 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.' };
 export default function ShelterScreen() {
   const [region, setRegion] = useState('');
   const [radius, setRadius] = useState(3000);
