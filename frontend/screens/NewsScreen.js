@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View, Text, Pressable, RefreshControl, Linking, Platform, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, Pressable, RefreshControl, Linking, ActivityIndicator } from 'react-native';
 import { styles as s } from '../theme';
-const baseUrl = process.env.EXPO_PUBLIC_API_URL || (Platform.OS === 'web' ? 'http://localhost:3001' : '');
+const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'https://potato-eyes.onrender.com';
 export default function NewsScreen() {
   const [data, setData] = useState({ articles: [] });
   const [loading, setLoading] = useState(true);

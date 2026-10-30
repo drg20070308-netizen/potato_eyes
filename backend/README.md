@@ -16,3 +16,5 @@ GET /api/news: articles(id, title, summaryLines[2~3], source, originalUrl, publi
 운영 전: API 키와 실제 응답을 연결한 검증, 네이버 이용약관 및 AI 요약 제공 권한 검토, HTTPS/모니터링/백업이 필요합니다. 이 서버는 단일 인스턴스 기준입니다. data를 영구 볼륨에 저장하세요. 여러 인스턴스로 확장할 때에는 공유 DB/분산 작업 잠금/공유 요청 제한을 도입해야 합니다. CORS_ORIGINS에는 실제 웹 서비스 출처만 지정하고, 프록시에서는 별도 IP 제한을 적용하세요. 앱 사용자의 요청은 외부 API 호출을 직접 일으키지 않습니다.
 
 공식 문서: https://developers.naver.com/docs/serviceapi/search/news/news.md / https://developers.openai.com/api/docs/guides/structured-outputs
+
+네이버 클라우드 NAVER API HUB의 뉴스 API와 X-NCP-APIGW-API-KEY-ID / X-NCP-APIGW-API-KEY 인증 헤더를 사용합니다. 기존 개발자센터 키가 아닌 API HUB 애플리케이션 키를 설정하세요.

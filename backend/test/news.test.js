@@ -18,7 +18,7 @@ test('normalize strips markup, preserves source and rejects unsafe links', () =>
 });
 test('collect uses newest order, credentials and deduplicates', async () => {
   const result = await collect(env, async (url, options) => {
-    assert.equal(url.searchParams.get('sort'), 'date'); assert.equal(options.headers['X-Naver-Client-Id'], 'test');
+    assert.equal(url.origin, 'https://naverapihub.apigw.ntruss.com'); assert.equal(url.pathname, '/search/v1/news'); assert.equal(url.searchParams.get('format'), 'json'); assert.equal(options.headers['X-NCP-APIGW-API-KEY'], 'test'); assert.equal(url.searchParams.get('sort'), 'date'); assert.equal(options.headers['X-NCP-APIGW-API-KEY-ID'], 'test');
     return { ok: true, json: async () => ({ items: [item, item] }) };
   }); assert.equal(result.length, 1);
 });
@@ -32,7 +32,7 @@ test('summary validates refusal, incomplete and invalid line counts', async () =
 test('service persists summaries, coalesces refresh and reuses on restart', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bukhan-test-'));
   let calls = 0;
-  const fetcher = async url => ({ ok: true, json: async () => String(url).includes('naver.com') ? { items: [item] } : (++calls, ai) });
+  const fetcher = async url => ({ ok: true, json: async () => String(url).includes('naverapihub.apigw.ntruss.com') ? { items: [item] } : (++calls, ai) });
   const file = pathToFileURL(join(dir, 'news.json'));
   try {
     const first = createNewsService({ env, file, fetcher });

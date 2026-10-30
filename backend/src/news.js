@@ -25,9 +25,9 @@ export async function fetchJson(url, options = {}, fetcher = fetch) {
   return response.json();
 }
 export async function collect(env, fetcher = fetch) {
-  const url = new URL('https://openapi.naver.com/v1/search/news.json');
-  url.search = new URLSearchParams({ query: '북한', display: '20', sort: 'date' }).toString();
-  const data = await fetchJson(url, { headers: { 'X-Naver-Client-Id': env.NAVER_CLIENT_ID, 'X-Naver-Client-Secret': env.NAVER_CLIENT_SECRET } }, fetcher);
+  const url = new URL('https://naverapihub.apigw.ntruss.com/search/v1/news');
+  url.search = new URLSearchParams({ query: '북한', display: '20', sort: 'date', format: 'json' }).toString();
+  const data = await fetchJson(url, { headers: { 'X-NCP-APIGW-API-KEY-ID': env.NAVER_CLIENT_ID, 'X-NCP-APIGW-API-KEY': env.NAVER_CLIENT_SECRET } }, fetcher);
   if (!Array.isArray(data.items)) throw new Error('INVALID_NAVER_RESPONSE');
   return [...new Map(data.items.map(normalize).filter(Boolean).map(a => [a.id, a])).values()].sort((a,b) => b.publishedAt.localeCompare(a.publishedAt));
 }
