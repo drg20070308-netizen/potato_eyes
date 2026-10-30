@@ -3,7 +3,7 @@
 Node.js 22 이상. 별도 npm 패키지 설치 없이 실행합니다.
 
 1. `.env.example`을 `.env`로 복사합니다.
-2. NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, GEMINI_API_KEY를 입력합니다. 네이버 개발자센터에서 검색 API 사용 권한이 필요합니다. Gemini 무료 한도는 계정/모델별로 다릅니다. 결제를 연결하지 않은 무료 프로젝트를 사용하세요.
+2. NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, GEMINI_API_KEY를 입력합니다. 네이버 클라우드 NAVER API HUB에서 뉴스 API 사용 권한이 필요합니다. Gemini 무료 한도는 계정/모델별로 다릅니다. 결제를 연결하지 않은 무료 프로젝트를 사용하세요.
 3. backend 폴더에서 `npm.cmd start`를 실행합니다. 테스트는 `npm.cmd test`입니다.
 
 GET /api/news: articles(id, title, summaryLines[2~3], source, originalUrl, publishedAt, summaryBasis), updatedAt, stale, status.
@@ -21,6 +21,13 @@ GET /api/news: articles(id, title, summaryLines[2~3], source, originalUrl, publi
 
 ## OpenAI에서 Gemini로 전환
 Google AI Studio https://aistudio.google.com/apikey 에서 키를 생성합니다.
-Render Environment에서 GEMINI_API_KEY에 키를 입력하고 GEMINI_MODEL=gemini-2.5-flash-lite, REFRESH_MINUTES=60을 설정하세요. OPENAI_API_KEY와 OPENAI_MODEL은 삭제합니다. NAVER 설정은 유지합니다.
+Render Environment에서 GEMINI_API_KEY에 키를 입력하고 GEMINI_MODEL=gemini-3.5-flash-lite, REFRESH_MINUTES=60을 설정하세요. OPENAI_API_KEY와 OPENAI_MODEL은 삭제합니다. NAVER 설정은 유지합니다.
 수정 코드를 GitHub에 올리고 Save, rebuild, and deploy로 재배포합니다. 실제 키를 이용한 검증은 배포 후 /api/news 응답으로 확인합니다.
 무료 한도 초과(429) 시 호출을 중단하며 저장된 뉴스가 있으면 유지합니다. 무료 티어에서 전송 자료가 제품 개선에 사용될 수 있으므로 공개 기사 제목과 검색 설명만 보냅니다.
+오류 진단: Render Logs에는 provider, HTTP 코드, 제공자가 반환한 message와 reason을 기록합니다. 요청에 사용한 키와 URL은 가립니다. 공개 /api/news에는 상세 메시지 대신 provider/code만 전달합니다. 403은 API 접근 권한 문제로, 결제 필요 여부를 코드만으로 단정하지 마세요. 이전 OpenAI 호출 코드는 사용하지 않습니다.
+
+## 행동 분석
+GET /api/analysis: 최근 24시간의 김정은 관련 뉴스와 북한 외교 뉴스를 조회하고 Gemini가 짧은 정치심리 분석을 생성합니다. 24시간 캐시, 실패 시 이전 분석 유지, 15분 재시도 간격을 사용합니다. 인용은 제공한 기사/연구 ID로 제한합니다. 연구는 Levy(1992), Jervis(1968)의 일반 이론 요지이며 개인의 심리 진단이 아닙니다. 기사 전문은 수집하지 않습니다. Render 무료 서버의 절전/재시작으로 정확한 시각의 정기 갱신과 캐시 유지가 보장되지는 않습니다. API 키는 기존 설정을 사용합니다.
+
+## 미사일 보도 알림
+GET /api/alerts. 네이버에서 북한 미사일 검색 결과 5건을 10분마다 확인하고 최근 6시간 기사를 대상으로 알림을 생성합니다. 기사 ID 중복 제거, 모의/가상 기사 제외, 원문 위치 문구 인용, 추정 표시를 적용합니다. 검색 설명 기반 탐지이므로 누락/오탐 가능성이 있으며 실제 낙하 지점을 검증하거나 재난 경보를 대체하지 않습니다. 현재 프런트엔드는 앱 실행 중 1분마다 목록을 확인합니다. 앱 종료 상태의 OS 푸시는 구현되지 않았습니다. iOS 개발 빌드, APNs/Expo 기기 토큰과 서버 전송 구성이 별도로 필요합니다. 무료 Render 절전 상태에서는 수집이 중단됩니다.

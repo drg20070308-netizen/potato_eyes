@@ -10,15 +10,15 @@ export default function NewsScreen() {
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(() => controller.abort(), 90000);
     async function load() {
       setLoading(true); setError('');
       try {
         if (!baseUrl) throw new Error('서버 주소 설정이 필요합니다.');
         const response = await fetch(`${baseUrl.replace(/\/$/, '')}/api/news`, { signal: controller.signal });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.status === 'not_configured' ? '뉴스 서비스 준비 중입니다. 서버 API 키를 설정해 주세요.' : '뉴스를 준비하고 있습니다. 잠시 후 다시 시도해 주세요.');
-        if (!Array.isArray(result.articles)) throw new Error('뉴스 응답을 확인할 수 없습니다.');
+        if (!response.ok) throw new Error(result.status === 'not_configured' ? '뉴스 서비스 준비 중입니다. 서버 API 키를 설정해 주세요.' : result.status === 'warming_up' ? '첫 뉴스를 요약하고 있습니다. 잠시 후 새로고침해 주세요.' : '뉴스 서비스 연결에 문제가 있습니다. 잠시 후 다시 시도해 주세요.');
+        if (!Array.isArray(result.articles) || result.articles.some(a => !a || typeof a.title !== 'string' || !Array.isArray(a.summaryLines) || a.summaryLines.some(line => typeof line !== 'string'))) throw new Error('뉴스 응답을 확인할 수 없습니다.');
         if (active) setData(result);
       } catch (e) { if (active) setError(e.name === 'AbortError' ? '연결 시간이 초과되었습니다. 다시 시도해 주세요.' : e.message); }
       finally { clearTimeout(timeout); if (active) setLoading(false); }
