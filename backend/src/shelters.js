@@ -78,7 +78,7 @@ export function createShelterService({ env, fetcher = fetch, official = true }) 
   return async params=>{
     const region=(params.get('region')||'').trim();
     if(region.length>80 || (!region&&!params.has('lat'))) return {code:400,body:{error:'INVALID_QUERY'}};
-    if(!env.KAKAO_REST_API_KEY?.trim()) return places(params);
+
     if(official) {
       try { const result=await searchOfficial(params); if(result) return result; }
       catch { return {code:503,body:{error:'PROVIDER_UNAVAILABLE'}}; }

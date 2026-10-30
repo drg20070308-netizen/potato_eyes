@@ -63,7 +63,7 @@ export default function ShelterScreen() {
       <Text style={s.caption}>반경: 입력 지역 주변 반경 검색 / 내 위치 주변 검색에 적용됩니다. 지역 검색은 해당 구·동 안만 찾습니다.</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{[1000, 3000, 5000, 10000, 20000].map(value => <Pressable accessibilityRole="button" accessibilityState={{ selected: radius === value }} key={value} disabled={busy} onPress={() => { setRadius(value); if (coords) search(coords, value); else if (data && searchMode === 'nearby') search(null, value, undefined, 'nearby'); }} style={[s.chip, radius === value && { borderColor: colors.accent }]}><Text style={s.label}>{value / 1000}km</Text></Pressable>)}</View>
     </View>
-    <Text style={s.caption}>사하구·사상구는 구청 공식 시설 목록을 우선 검색하며, 다른 지역은 카카오 장소 검색을 사용합니다. 개방 여부는 시설에 확인하세요. 거리는 직선거리입니다.</Text>
+    <Text style={s.caption}>행정안전부 전국 민방위 대피시설 공개자료를 검색합니다. 사용 중 시설만 포함하며, 실시간 개방·수용 여유는 시설에 확인하세요. 거리는 직선거리입니다.</Text>
     {busy && <View accessibilityLiveRegion="polite"><ActivityIndicator color={colors.accent} /><Text style={s.subtitle}>{locating ? '현재 위치 확인 중…' : '대피소 검색 중…'}</Text></View>}
     {!!error && <Text accessibilityRole="alert" style={s.subtitle}>{error}</Text>}
     {data?.coverage && <Text style={s.caption}>{data.coverage}</Text>}

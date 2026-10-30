@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { matchesRegion } from './shelter-region.js';
-export const officialRecords = JSON.parse(readFileSync(new URL('../fixtures/busan-official-shelters.json', import.meta.url), 'utf8'));
+export const nationalDataset = JSON.parse(readFileSync(new URL('../fixtures/national-official-shelters.json', import.meta.url), 'utf8'));
+export const officialRecords = nationalDataset.records;
 export function distanceMeters(lat, lng, otherLat, otherLng) {
   const rad = x => x * Math.PI / 180, dLat = rad(otherLat-lat), dLng = rad(otherLng-lng);
   const a = Math.sin(dLat/2)**2 + Math.cos(rad(lat))*Math.cos(rad(otherLat))*Math.sin(dLng/2)**2;
@@ -8,7 +9,7 @@ export function distanceMeters(lat, lng, otherLat, otherLng) {
 }
 export function matchesOfficialRegion(region, item) {
   const legalDong = item.dong.replace(/\d+동$/, '동');
-  return matchesRegion(region, [`${item.region} ${item.dong} ${legalDong}`]);
+  return matchesRegion(region, [`${item.region} ${item.dong} ${legalDong}`, item.landAddress, item.address].map(value => String(value || '').replace(/[(),]/g, ' ')));
 }
 export function createOfficialSearch({ env, fetcher = fetch, records = officialRecords }) {
   const enriched = new Map(), pending = new Map();
@@ -53,13 +54,12 @@ export function createOfficialSearch({ env, fetcher = fetch, records = officialR
       lat=Number(center.y);lng=Number(center.x); params.set('lat',String(lat));params.set('lng',String(lng));
     }
     if(nearby && (!Number.isFinite(lat)||!Number.isFinite(lng)||lat<33||lat>39||lng<124||lng>132)) return {code:400,body:{error:'INVALID_QUERY'}};
-    // The bundled authoritative coverage is explicitly limited to two districts.
-    if(nearby && (lat<34.8||lat>35.5||lng<128.5||lng>129.4)) return null;
+    // Scan the nationwide inventory; do not restrict candidates to a city or provider result page.
     const candidates=nearby?records:records.filter(item=>matchesOfficialRegion(region,item));
-    if(!candidates.length) return null;
+
     const hydrated=await hydrateAll(candidates);
     const located=hydrated.filter(item=>Number.isFinite(item.lat)&&Number.isFinite(item.lng));
     const shelters=(nearby?located.map(item=>({...item,distance:distanceMeters(lat,lng,item.lat,item.lng)})).filter(item=>item.distance<=radius).sort((a,b)=>a.distance-b.distance):hydrated.map(item=>({...item,distance:null})));
-    return {code:200,body:{shelters,hasMore:false,source:'사하구청·사상구청 공식 민방위 대피시설 목록',checkedAt:new Date().toISOString(),dataCheckedAt:'2026-10-30',coverage:'공식 목록 수록 범위: 부산 사하구·사상구. 전국 전수 자료는 아닙니다.',coordinateMissing:hydrated.length-located.length,mode:nearby?'nearby':'region',center:nearby?{lat,lng,label:region||'내 위치',radius}:null}};
+    return {code:200,body:{shelters,hasMore:false,source:'행정안전부 전국 민방위 대피시설 공개자료',checkedAt:new Date().toISOString(),dataCheckedAt:nationalDataset.importedAt,coverage:`전국 17개 시도 · 사용 중 시설 ${officialRecords.length.toLocaleString('ko-KR')}곳. 첨부 원본 기준이며 실시간 개방 상태는 확인되지 않았습니다.`,datasetCount:officialRecords.length,coordinateMissing:hydrated.length-located.length,mode:nearby?'nearby':'region',center:nearby?{lat,lng,label:region||'내 위치',radius}:null}};
   };
 }

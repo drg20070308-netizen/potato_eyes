@@ -1,6 +1,8 @@
+import { readFileSync } from 'node:fs';
+const officialRecords=JSON.parse(readFileSync(new URL('../fixtures/busan-official-shelters.json',import.meta.url),'utf8'));
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createOfficialSearch, officialRecords, matchesOfficialRegion, distanceMeters } from '../src/official-shelters.js';
+import { createOfficialSearch, matchesOfficialRegion, distanceMeters } from '../src/official-shelters.js';
 const env={KAKAO_REST_API_KEY:'test'};
 test('official municipal snapshot includes Hadan and Deokpo facilities',()=>{
  assert.equal(officialRecords.length,173);
@@ -9,7 +11,7 @@ test('official municipal snapshot includes Hadan and Deokpo facilities',()=>{
  assert.ok(officialRecords.filter(i=>matchesOfficialRegion('사상구',i)).every(i=>i.region==='부산 사상구'));
 });
 test('regional listing survives missing geocodes and never hides official Hadan entries',async()=>{
- const search=createOfficialSearch({env,fetcher:async()=>({ok:true,json:async()=>({documents:[]})})});
+ const search=createOfficialSearch({env,records:officialRecords,fetcher:async()=>({ok:true,json:async()=>({documents:[]})})});
  const r=await search(new URLSearchParams('region=하단동'));
  assert.equal(r.body.shelters.length,9);assert.equal(r.body.coordinateMissing,9);
  assert.ok(r.body.shelters.some(i=>i.name==='하단역'));
