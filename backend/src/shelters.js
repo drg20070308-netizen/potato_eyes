@@ -38,7 +38,7 @@ export function createShelterService({ env, fetcher = fetch }) {
         else searchRegion = regionTokens(region).slice(0, -1).join(' ') || region;
       }
       const documents = new Map(); let hasMore = false;
-      const queries = hasCoordinates ? ['민방위대피소'] : [...new Set([`${region} 민방위대피소`, ...(isDong ? [`${searchRegion} 민방위대피소`] : [])])];
+      const queries = hasCoordinates ? ['민방위대피소'] : [...new Set([`${region} 민방위대피소`, `${region} 대피소`, ...(isDong ? [`${searchRegion} 민방위대피소`, `${searchRegion} 대피소`] : [])])];
       for (const query of queries) {
         for (let page = 1; page <= (hasCoordinates ? 1 : 3); page++) {
           const url = new URL('https://dapi.kakao.com/v2/local/search/keyword.json');

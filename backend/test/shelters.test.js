@@ -25,7 +25,7 @@ test('nearby query applies provider radius, distance order, normalizes and omits
 });
 test('regional results do not invent distances', async () => {
   const search = createShelterService({ env: { KAKAO_REST_API_KEY: 'secret' }, fetcher: async url => {
-    assert.equal(url.searchParams.get('query'), '서울 민방위대피소'); assert.equal(url.searchParams.has('x'), false);
+    assert.ok(['서울 민방위대피소', '서울 대피소'].includes(url.searchParams.get('query'))); assert.equal(url.searchParams.has('x'), false);
     return { ok: true, json: async () => ({ meta: { is_end: true }, documents: [{ id: '1', x: '127', y: '37', distance: '', address_name: '서울 강남구 역삼동' }] }) };
   } });
   assert.equal((await search(params('region=서울'))).body.shelters[0].distance, null);
@@ -73,4 +73,18 @@ test('administrative dong reverse lookup excludes facilities in another dong', a
     return { ok: true, json: async () => ({ documents, meta: { is_end: true } }) };
   } });
   assert.deepEqual((await search(params('region=부산 사상구 덕포1동'))).body.shelters.map(s => s.id), ['1']);
+});
+
+test('alternate shelter keyword recovers dong results and never admits another district', async () => {
+  const queries = [];
+  const search = createShelterService({ env: { KAKAO_REST_API_KEY: 'test' }, fetcher: async url => {
+    let documents = [];
+    if (url.pathname.includes('address.json')) documents = [{ address_name: '부산 사상구 덕포동', address: { region_1depth_name: '부산', region_2depth_name: '사상구', region_3depth_name: '덕포동' } }];
+    else { const query = url.searchParams.get('query'); queries.push(query); if (query === '부산 사상구 대피소') documents = [{ id: 'target', x: '129', y: '35', address_name: '부산 사상구 덕포동 12' }, { id: 'wrong', x: '129', y: '35', address_name: '부산 북구 덕천동 12' }]; }
+    return { ok: true, json: async () => ({ documents, meta: { is_end: true } }) };
+  } });
+  const result = await search(params('region=부산 사상구 덕포동'));
+  assert.equal(result.code, 200);
+  assert.deepEqual(result.body.shelters.map(s => s.id), ['target']);
+  assert.ok(queries.includes('부산 사상구 대피소'));
 });
