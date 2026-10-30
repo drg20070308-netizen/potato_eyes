@@ -1,7 +1,6 @@
 import { Text } from '../components/Typography';
 import React, { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, StyleSheet, View, useWindowDimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme';
 
@@ -9,9 +8,10 @@ export default function LaunchScreen({ onFinish }) {
   const windowSize = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [layout, setLayout] = useState(null);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const { height, width } = layout || windowSize;
   const cloudScale = Math.min(2.3, (width - 32) / 320, height / 500);
-  const flightDistance = Math.max(width * 0.5, height * 0.6);
+  const flightDistance = height * 0.3;
   const fall = useRef(new Animated.Value(0)).current;
   const impact = useRef(new Animated.Value(0)).current;
   const fade = useRef(new Animated.Value(1)).current;
@@ -25,9 +25,9 @@ export default function LaunchScreen({ onFinish }) {
     const fallback = setTimeout(finish, 7500);
     AccessibilityInfo.isReduceMotionEnabled().catch(() => false).then(reduced => {
       if (cancelled) return;
-      if (reduced) { fall.setValue(1); impact.setValue(0.45); reducedTimer = setTimeout(finish, 1800); return; }
+      if (reduced) { setReducedMotion(true); fall.setValue(0.4); impact.setValue(0.45); reducedTimer = setTimeout(finish, 2500); return; }
       animation = Animated.sequence([
-        Animated.delay(250),
+        Animated.delay(800),
         Animated.timing(fall, { toValue: 1, duration: 1600, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
         Animated.parallel([
           Animated.timing(impact, { toValue: 1, duration: 1900, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
@@ -46,8 +46,11 @@ export default function LaunchScreen({ onFinish }) {
     <View style={[styles.top, { paddingTop: insets.top + 16 }]}><Text style={styles.eyebrow}>NORTH KOREA · DAILY INTELLIGENCE</Text></View>
     <View style={styles.brand}><Text maxFontSizeMultiplier={1.2} style={[styles.name, { fontSize: Math.min(72, width * 0.18, height * 0.13) }]}>북한이</Text><Text maxFontSizeMultiplier={1.2} style={styles.tagline}>흩어진 소식, 선명한 시선.</Text></View>
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFillObject, { transform: [{ translateX: shake }] }]}>
-      <Animated.View style={[styles.missile, { top: height * 0.69 - 100, left: width / 2 - 80, opacity: impact.interpolate({ inputRange: [0, 0.08, 1], outputRange: [1, 0, 0] }), transform: [{ translateY: fall.interpolate({ inputRange: [0, 1], outputRange: [-flightDistance, 0] }) }, { translateX: fall.interpolate({ inputRange: [0, 1], outputRange: [-width * 0.55, 0] }) }, { rotate: '90deg' }] }]}>
-        <View style={styles.trail} /><Ionicons name="rocket" size={160} color={colors.accent} />
+      <Animated.View style={[styles.missile, { zIndex: 5, top: height * 0.69 - 100, left: width / 2 - 80, opacity: reducedMotion ? 1 : impact.interpolate({ inputRange: [0, 0.08, 1], outputRange: [1, 0, 0] }), transform: [{ translateY: fall.interpolate({ inputRange: [0, 1], outputRange: [-flightDistance, 0] }) }, { translateX: fall.interpolate({ inputRange: [0, 1], outputRange: [-width * 0.12, 0] }) }, { rotate: '135deg' }] }]}>
+        <View style={styles.rocketFlame} />
+        <View style={styles.rocketFinLeft} /><View style={styles.rocketFinRight} />
+        <View style={styles.rocketBody}><View style={styles.rocketBand} /><View style={styles.rocketWindow} /></View>
+        <View style={styles.rocketNose} />
       </Animated.View>
       {[0, 1, 2].map(i => <Animated.View key={i} style={[styles.ring, { left: width / 2 - 65, top: height * 0.69 - 65, opacity: impact.interpolate({ inputRange: [0, 0.04, 0.65, 1], outputRange: [0, 0.8, 0.25, 0] }), transform: [{ scale: impact.interpolate({ inputRange: [0, 1], outputRange: [0.1, 12 + i * 5] }) }] }]} />)}
       <Animated.View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, opacity: impact.interpolate({ inputRange: [0, 0.015, 0.14, 1], outputRange: [0, 0.9, 0, 0] }) }]} />
@@ -67,5 +70,12 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.muted, fontSize: 9, letterSpacing: 1.5 },
   brand: { position: 'absolute', top: '23%', left: 24, right: 24, alignItems: 'center' }, name: { fontSize: 72, fontWeight: '400', color: colors.text, letterSpacing: -3 }, tagline: { color: colors.muted, fontSize: 14, marginTop: 12 },
   missile: { position: 'absolute', width: 160, height: 160 }, trail: { position: 'absolute', width: 20, height: 230, top: 110, left: 35, backgroundColor: colors.accent, opacity: 0.25, transform: [{ rotate: '45deg' }], borderRadius: 10 },
+  rocketBody: { position: 'absolute', left: 53, top: 30, width: 54, height: 110, backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 2, borderColor: '#502323', overflow: 'hidden' },
+  rocketNose: { position: 'absolute', left: 53, top: 0, width: 0, height: 0, borderLeftWidth: 27, borderRightWidth: 27, borderBottomWidth: 42, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: '#502323' },
+  rocketBand: { position: 'absolute', top: 65, width: 54, height: 14, backgroundColor: '#C45050' },
+  rocketWindow: { position: 'absolute', top: 20, left: 13, width: 24, height: 24, borderRadius: 12, backgroundColor: '#502323' },
+  rocketFinLeft: { position: 'absolute', left: 27, top: 95, width: 35, height: 48, backgroundColor: '#502323', borderTopLeftRadius: 30 },
+  rocketFinRight: { position: 'absolute', right: 27, top: 95, width: 35, height: 48, backgroundColor: '#502323', borderTopRightRadius: 30 },
+  rocketFlame: { position: 'absolute', left: 62, top: 125, width: 36, height: 65, borderRadius: 24, backgroundColor: '#FFCC57', borderWidth: 7, borderColor: '#FF792F' },
   ring: { position: 'absolute', width: 130, height: 130, borderRadius: 65, borderWidth: 1, borderColor: colors.accent }, burst: { position: 'absolute', width: 56, height: 56, borderRadius: 28, backgroundColor: colors.accentSoft },
 });

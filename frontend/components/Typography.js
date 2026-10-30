@@ -4,7 +4,7 @@ import { isLoaded } from 'expo-font';
 
 // Set to false to restore Noto Sans KR, preserving the launch title's own font.
 const useSerif = true;
-const serifFamily = 'NotoSerifKR_400Regular';
+const serifFamily = 'Gungsuh';
 
 function fontStyle(style, variant) {
   const resolved = StyleSheet.flatten(style);

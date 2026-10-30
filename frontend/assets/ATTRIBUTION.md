@@ -12,4 +12,4 @@ Source: https://github.com/expo/google-fonts/tree/main/font-packages/noto-sans-k
 Font license: SIL Open Font License 1.1 (included in the package as LICENSE_FONT).
 Used weights: Regular 400, SemiBold 600, Bold 700. This is a visual approximation of the reference screenshot; its exact typeface was not identified.
 
-Noto Serif KR Regular 400 is bundled through @expo-google-fonts/noto-serif-kr for consistent Korean serif text on iOS, Android and web. License: SIL Open Font License 1.1 (LICENSE_FONT in the package). Source: https://github.com/expo/google-fonts/tree/main/font-packages/noto-serif-kr
+Gungsuh.ttf is prepared from this computer's installed Windows batang.ttc for the owner's local preview. It is a Microsoft Windows font, not an SIL OFL font. The extraction helper is scripts/extract-local-gungsuh.cjs. Redistribution rights are not supplied by this project.
