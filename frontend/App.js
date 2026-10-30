@@ -1,5 +1,6 @@
 import LaunchScreen from './screens/LaunchScreen';
 import MissileAlerts from './components/MissileAlerts';
+import AnimatedTabButton from './components/AnimatedTabButton';
 import React, { useState } from 'react';
 import { View, Pressable, StatusBar, Alert, ActivityIndicator } from 'react-native';
 import { Text } from './components/Typography';
@@ -32,9 +33,7 @@ export default function App() {
     <View style={s.header}><View><Text style={s.brand}>북한이</Text><Text style={s.caption}>북한 소식을 한눈에</Text></View>
       <MissileAlerts /></View>
     <View style={{ flex: 1 }}>{tabs.map(({ id, screen: Screen }) => <View key={id} style={{ flex: 1, display: currentTab === id ? 'flex' : 'none' }}><Screen /></View>)}</View>
-    <View style={s.tabs}>{tabs.map(tab => <Pressable key={tab.id} accessibilityRole="tab" accessibilityState={{ selected: currentTab === tab.id }} accessibilityLabel={tab.label} onPress={() => setCurrentTab(tab.id)} style={s.tab}>
-      <Ionicons name={tab.icon} size={23} color={currentTab === tab.id ? colors.accent : colors.muted} /><Text style={[s.tabLabel, { color: currentTab === tab.id ? colors.accent : colors.muted }]}>{tab.label}</Text>
-    </Pressable>)}</View>
+    <View style={s.tabs}>{tabs.map(tab => <AnimatedTabButton key={tab.id} label={tab.label} icon={tab.icon} selected={currentTab === tab.id} onPress={() => setCurrentTab(tab.id)} />)}</View>
   </SafeAreaView>
     {showLaunch && <LaunchScreen onFinish={() => setShowLaunch(false)} />}
   </View></SafeAreaProvider>;
