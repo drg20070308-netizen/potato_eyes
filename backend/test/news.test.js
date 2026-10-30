@@ -7,8 +7,8 @@ import { pathToFileURL } from 'node:url';
 import { normalize, collect, summarize, clean } from '../src/news.js';
 import { createNewsService } from '../src/service.js';
 const item = { title: '<b>북한</b> &quot;소식&quot;', description: '관련 보도입니다.', originallink: 'https://www.yna.co.kr/view/123', pubDate: 'Fri, 30 Oct 2026 10:00:00 +0900' };
-const env = { NAVER_CLIENT_ID: 'test', NAVER_CLIENT_SECRET: 'test', OPENAI_API_KEY: 'test' };
-const ai = { status: 'completed', output: [{ content: [{ type: 'output_text', text: JSON.stringify({ lines: ['북한 관련 소식이 보도됐다.', '추가 내용은 원문에서 확인할 수 있다.'] }) }] }] };
+const env = { NAVER_CLIENT_ID: 'test', NAVER_CLIENT_SECRET: 'test', GEMINI_API_KEY: 'test' };
+const ai = { candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify({ lines: ['북한 관련 소식이보도됐다.', '추가 내용은 원문에서 확인할 수 있다.'] }) }] } }] };
 test('normalize strips markup, preserves source and rejects unsafe links', () => {
   const result = normalize(item);
   assert.equal(result.title, '북한 "소식"'); assert.equal(result.source, '연합뉴스');
@@ -54,5 +54,21 @@ test('diagnostics exclude raw messages and credentials', async () => {
   assert.deepEqual(safeFailure(new Error('secret-key-should-never-appear')), { provider: 'pipeline', code: 'REQUEST_OR_PROCESSING_FAILED' });
   await assert.rejects(collect(env, async () => ({ ok: false, status: 401, json: async () => ({ message: 'secret', error: { code: 'invalid_api_key' } }) })), error => {
     assert.deepEqual(safeFailure(error), { provider: 'naver', code: 'HTTP_401', providerCode: 'invalid_api_key' }); return true;
+  });
+});
+
+test('Gemini request uses server key, structured output and rejects blocked results', async () => {
+  const result = await summarize(normalize(item), env, async (url, options) => {
+    assert.equal(url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent');
+    assert.equal(options.headers['x-goog-api-key'], 'test');
+    const request = JSON.parse(options.body);
+    assert.equal(request.generationConfig.responseMimeType, 'application/json');
+    assert.equal(request.generationConfig.responseJsonSchema.properties.lines.minItems, 2);
+    return { ok: true, json: async () => ai };
+  });
+  assert.equal(result.length, 2);
+  await assert.rejects(summarize(normalize(item), env, async () => ({ ok: true, json: async () => ({ candidates: [{ finishReason: 'SAFETY' }] }) })));
+  await assert.rejects(summarize(normalize(item), env, async () => ({ ok: false, status: 429, json: async () => ({ error: { status: 'RESOURCE_EXHAUSTED', message: 'secret' } }) })), error => {
+    assert.deepEqual(safeFailure(error), { provider: 'gemini', code: 'HTTP_429', providerCode: 'RESOURCE_EXHAUSTED' }); return true;
   });
 });
