@@ -1,9 +1,11 @@
 import http from 'node:http';
 import { createNewsService } from './service.js';
+import { createShelterService } from './shelters.js';
+const searchShelters = createShelterService({ env: process.env });
 const service = createNewsService({ env: process.env, file: new URL('../data/news.json', import.meta.url) });
 const origins = new Set((process.env.CORS_ORIGINS || 'http://localhost:8082,http://localhost:8081').split(',').map(s => s.trim()));
 const limits = new Map();
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Cache-Control', 'no-store');
@@ -18,6 +20,11 @@ const server = http.createServer((req, res) => {
   if (++limit.count > 120) { res.setHeader('Retry-After', '60'); res.writeHead(429); return res.end(JSON.stringify({ error: 'RATE_LIMITED' })); }
   const path = new URL(req.url, 'http://localhost').pathname;
   if (path === '/health') return res.end(JSON.stringify({ status: 'ok' }));
+  if (path === '/api/shelters') {
+    const result = await searchShelters(new URL(req.url, 'http://localhost').searchParams);
+    res.writeHead(result.code);
+    return res.end(JSON.stringify(result.body));
+  }
   if (path === '/api/news') {
     const data = service.read();
     res.writeHead(data.updatedAt ? 200 : 503);
