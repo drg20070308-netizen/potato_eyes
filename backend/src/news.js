@@ -41,9 +41,9 @@ export async function fetchJson(url, options = {}, fetcher = fetch) {
   }
   try { return await response.json(); } catch (error) { error.provider = provider; throw error; }
 }
-export async function collect(env, fetcher = fetch) {
+export async function collect(env, fetcher = fetch, query = '북한') {
   const url = new URL('https://naverapihub.apigw.ntruss.com/search/v1/news');
-  url.search = new URLSearchParams({ query: '북한', display: '5', sort: 'date', format: 'json' }).toString();
+  url.search = new URLSearchParams({ query, display: '5', sort: 'date', format: 'json' }).toString();
   const data = await fetchJson(url, { headers: { 'X-NCP-APIGW-API-KEY-ID': env.NAVER_CLIENT_ID, 'X-NCP-APIGW-API-KEY': env.NAVER_CLIENT_SECRET } }, fetcher);
   if (!Array.isArray(data.items)) throw new Error('INVALID_NAVER_RESPONSE');
   return [...new Map(data.items.map(normalize).filter(Boolean).map(a => [a.id, a])).values()].sort((a,b) => b.publishedAt.localeCompare(a.publishedAt));
@@ -67,3 +67,4 @@ export async function summarize(article, env, fetcher = fetch) {
   return lines.map(x => x.trim());
 }
 export function fingerprint(article, model) { return createHash('sha256').update(JSON.stringify([article.title, article.description, model, 'v1'])).digest('hex'); }
+

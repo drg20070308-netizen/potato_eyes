@@ -1,6 +1,8 @@
+import { createAnalysisService } from './analysis.js';
 import http from 'node:http';
 import { createNewsService } from './service.js';
 const service = createNewsService({ env: process.env, file: new URL('../data/news.json', import.meta.url) });
+const analysisService = createAnalysisService({ env: process.env, file: new URL('../data/analysis.json', import.meta.url) });
 const origins = new Set((process.env.CORS_ORIGINS || 'http://localhost:8082,http://localhost:8081').split(',').map(s => s.trim()));
 const limits = new Map();
 const server = http.createServer((req, res) => {
@@ -18,6 +20,7 @@ const server = http.createServer((req, res) => {
   if (++limit.count > 120) { res.setHeader('Retry-After', '60'); res.writeHead(429); return res.end(JSON.stringify({ error: 'RATE_LIMITED' })); }
   const path = new URL(req.url, 'http://localhost').pathname;
   if (path === '/health') return res.end(JSON.stringify({ status: 'ok' }));
+  if (path === '/api/analysis') { const data = analysisService.read(); res.writeHead(data.analysis ? 200 : 503); return res.end(JSON.stringify(data)); }
   if (path === '/api/news') {
     const data = service.read();
     res.writeHead(data.updatedAt ? 200 : 503);
@@ -25,8 +28,8 @@ const server = http.createServer((req, res) => {
   }
   res.writeHead(404); res.end(JSON.stringify({ error: 'NOT_FOUND' }));
 });
-await service.load();
+await service.load(); await analysisService.load();
 server.listen(Number(process.env.PORT) || 3001, process.env.HOST || '0.0.0.0');
-void service.refresh();
-const timer = setInterval(() => { for (const [ip, value] of limits) if (Date.now() > value.reset) limits.delete(ip); void service.refresh(); }, 60000);
+void service.refresh(); void analysisService.refresh();
+const timer = setInterval(() => { for (const [ip, value] of limits) if (Date.now() > value.reset) limits.delete(ip); void service.refresh(); void analysisService.refresh(); }, 60000);
 for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { clearInterval(timer); server.close(() => process.exit(0)); });
