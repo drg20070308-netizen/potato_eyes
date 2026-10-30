@@ -1,6 +1,7 @@
+import { createOfficialSearch } from './official-shelters.js';
 import { matchesRegion, regionTokens } from './shelter-region.js';
 // Place search is a discovery aid, not an authoritative civil-defence registry.
-export function createShelterService({ env, fetcher = fetch }) {
+export function createPlaceShelterService({ env, fetcher = fetch }) {
   const apiKey = env.KAKAO_REST_API_KEY?.trim();
   return async function search(params) {
     const region = (params.get('region') || '').trim();
@@ -68,5 +69,20 @@ export function createShelterService({ env, fetcher = fetch }) {
       }));
       return { code: 200, body: { shelters, hasMore: !data.meta.is_end, source: '카카오맵 장소 검색', checkedAt: new Date().toISOString() } };
     } catch (error) { return { code: 503, body: { error: error.publicCode || 'PROVIDER_UNAVAILABLE' } }; }
+  };
+}
+
+export function createShelterService({ env, fetcher = fetch, official = true }) {
+  const places=createPlaceShelterService({env,fetcher});
+  const searchOfficial=createOfficialSearch({env,fetcher});
+  return async params=>{
+    const region=(params.get('region')||'').trim();
+    if(region.length>80 || (!region&&!params.has('lat'))) return {code:400,body:{error:'INVALID_QUERY'}};
+    if(!env.KAKAO_REST_API_KEY?.trim()) return places(params);
+    if(official) {
+      try { const result=await searchOfficial(params); if(result) return result; }
+      catch { return {code:503,body:{error:'PROVIDER_UNAVAILABLE'}}; }
+    }
+    return places(params);
   };
 }
