@@ -10,7 +10,7 @@ export function createNewsService({ env, file, fetcher = fetch }) {
   async function load() { try { const saved = JSON.parse(await readFile(file, 'utf8')); if (Array.isArray(saved.articles) && saved.updatedAt) snapshot = saved; } catch { /* First run or invalid cache: fetch again. */ } }
   async function refresh() {
     if (running) return running;
-    if (!configured() || Date.now() - lastAttempt < interval) return;
+    if (!configured() || Date.now() - lastAttempt < (failed ? Math.min(interval, 5 * 60000) : interval)) return;
     lastAttempt = Date.now();
     running = (async () => {
       try {

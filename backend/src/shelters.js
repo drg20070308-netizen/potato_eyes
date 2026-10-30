@@ -1,5 +1,6 @@
 // Place search is a discovery aid, not an authoritative civil-defence registry.
 export function createShelterService({ env, fetcher = fetch }) {
+  const apiKey = env.KAKAO_REST_API_KEY?.trim();
   return async function search(params) {
     const region = (params.get('region') || '').trim();
     const hasCoordinates = params.has('lat') || params.has('lng');
@@ -10,13 +11,13 @@ export function createShelterService({ env, fetcher = fetch }) {
         ![1000, 3000, 5000, 10000, 20000].includes(radius)) {
       return { code: 400, body: { error: 'INVALID_QUERY' } };
     }
-    if (!env.KAKAO_REST_API_KEY) return { code: 503, body: { error: 'NOT_CONFIGURED' } };
+    if (!apiKey) return { code: 503, body: { error: 'NOT_CONFIGURED' } };
     const url = new URL('https://dapi.kakao.com/v2/local/search/keyword.json');
     url.searchParams.set('query', `${hasCoordinates ? '' : region + ' '}민방위대피소`);
     url.searchParams.set('size', '15');
     if (hasCoordinates) for (const [key, value] of Object.entries({ x: lng, y: lat, radius, sort: 'distance' })) url.searchParams.set(key, String(value));
     try {
-      const response = await fetcher(url, { headers: { Authorization: `KakaoAK ${env.KAKAO_REST_API_KEY}` }, signal: AbortSignal.timeout(10000) });
+      const response = await fetcher(url, { headers: { Authorization: `KakaoAK ${apiKey}` }, signal: AbortSignal.timeout(10000) });
       if (!response.ok) {
         let error = response.status === 429 ? 'PROVIDER_LIMIT' : [401, 403].includes(response.status) ? 'PROVIDER_UNAUTHORIZED' : 'PROVIDER_ERROR';
         if (response.status === 403) {
