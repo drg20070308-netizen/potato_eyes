@@ -27,7 +27,7 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState('news');
   const [fontsLoaded, fontError] = useFonts({ ...Ionicons.font, Gungsuh: require('./assets/Gungsuh.ttf'), NotoSansKR_400Regular, NotoSansKR_600SemiBold, NotoSansKR_700Bold });
   if (!fontsLoaded && !fontError) return <View style={[s.root, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={colors.accent} /></View>;
-  return <SafeAreaProvider><View style={s.root}><SafeAreaView style={s.root} accessibilityElementsHidden={showLaunch} importantForAccessibility={showLaunch ? 'no-hide-descendants' : 'auto'}>
+  return <SafeAreaProvider><View style={s.root}><SafeAreaView style={[s.root, showLaunch && { opacity: 0 }]} pointerEvents={showLaunch ? 'none' : 'auto'} accessibilityElementsHidden={showLaunch} importantForAccessibility={showLaunch ? 'no-hide-descendants' : 'auto'}>
     <StatusBar barStyle="light-content" />
     <View style={s.header}><View><Text style={s.brand}>북한이</Text><Text style={s.caption}>북한 소식을 한눈에</Text></View>
       <MissileAlerts /></View>

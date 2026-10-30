@@ -39,7 +39,7 @@ export default function NewsScreen() {
     <Pressable accessibilityRole="button" disabled={loading} onPress={() => setRetry(n => n + 1)} style={s.chip}><Text style={s.cardLabel}>새로고침</Text></Pressable>
     {!loading && !error && !data.articles.length && <Text style={s.subtitle}>등록된 뉴스가 없습니다.</Text>}
     {data.articles.map(article => <View key={article.id} style={s.card}>
-      <Text style={s.cardLabel}>AI 요약 · 북한</Text><Text style={s.cardHeading}>{article.title}</Text>
+      <Text style={s.cardHeading}>{article.title}</Text>
       {article.summaryLines.map((line, i) => <Text variant="default" key={i} style={s.cardSubtitle}>{line}</Text>)}
       <Text variant="default" style={s.cardCaption}>출처 · {article.source} / {new Date(article.publishedAt).toLocaleDateString('ko-KR')}</Text>
       <Pressable accessibilityRole="link" accessibilityLabel={`${article.source} 기사 원문 보기`} onPress={() => openArticle(article.originalUrl)}><Text style={s.cardLabel}>원문 보기 ↗</Text><Text variant="default" style={s.cardCaption}>{article.originalUrl}</Text></Pressable>
