@@ -1,3 +1,4 @@
+import { safeFailure } from './diagnostics.js';
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
 import { collect, summarize, fingerprint } from './news.js';
 export function createNewsService({ env, file, fetcher = fetch }) {
@@ -19,7 +20,7 @@ export function createNewsService({ env, file, fetcher = fetch }) {
           const previous = old.get(item.id);
           if (previous?.fingerprint === hash) { articles.push({ ...previous, ...item }); continue; }
           try { articles.push({ ...item, summaryLines: await summarize(item, env, fetcher), summaryBasis: 'title_and_search_description', fingerprint: hash }); }
-          catch { failed = true; /* Never present an ungenerated summary as AI output. */ }
+          catch (error) { failed = true; console.error('News summary failed', JSON.stringify({ ...safeFailure(error), provider: 'openai' })); if ([400, 401, 403, 404, 429].includes(error.status)) throw error; }
         }
         if (items.length && !articles.length) throw new Error('NO_SUMMARIES');
         const next = { articles, updatedAt: new Date().toISOString() };
@@ -27,7 +28,7 @@ export function createNewsService({ env, file, fetcher = fetch }) {
         await writeFile(new URL(`${file.href}.tmp`), JSON.stringify(next), { mode: 0o600 });
         await rename(new URL(`${file.href}.tmp`), file);
         snapshot = next; failed = articles.length < items.length;
-      } catch { failed = true; console.error('News refresh failed; retained previous snapshot. Check server credentials and provider availability.'); }
+      } catch (error) { failed = true; console.error('News refresh failed; retained previous snapshot.', JSON.stringify(safeFailure(error))); }
     })().finally(() => { running = null; });
     return running;
   }

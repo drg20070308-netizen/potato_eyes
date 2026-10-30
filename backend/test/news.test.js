@@ -48,3 +48,11 @@ test('service persists summaries, coalesces refresh and reuses on restart', asyn
 test('missing credentials gives explicit unconfigured state', () => {
   assert.equal(createNewsService({ env: {}, file: new URL('file:///unused') }).read().status, 'not_configured');
 });
+
+import { safeFailure } from '../src/diagnostics.js';
+test('diagnostics exclude raw messages and credentials', async () => {
+  assert.deepEqual(safeFailure(new Error('secret-key-should-never-appear')), { provider: 'pipeline', code: 'REQUEST_OR_PROCESSING_FAILED' });
+  await assert.rejects(collect(env, async () => ({ ok: false, status: 401, json: async () => ({ message: 'secret', error: { code: 'invalid_api_key' } }) })), error => {
+    assert.deepEqual(safeFailure(error), { provider: 'naver', code: 'HTTP_401', providerCode: 'invalid_api_key' }); return true;
+  });
+});

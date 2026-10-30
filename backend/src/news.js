@@ -21,7 +21,16 @@ export function normalize(item) {
 }
 export async function fetchJson(url, options = {}, fetcher = fetch) {
   const response = await fetcher(url, { ...options, signal: AbortSignal.timeout(30000) });
-  if (!response.ok) throw new Error(`UPSTREAM_${response.status}`);
+  if (!response.ok) {
+    const error = new Error('UPSTREAM_ERROR');
+    error.status = response.status;
+    error.provider = new URL(url).hostname === 'api.openai.com' ? 'openai' : 'naver';
+    const body = await response.json().catch(() => ({}));
+    const code = body.error?.code ?? body.errorCode ?? body.code;
+    const allowed = new Set(['insufficient_quota', 'invalid_api_key', 'model_not_found', 'rate_limit_exceeded', 'invalid_json_schema', 'unsupported_parameter', 'invalid_value', 'authentication_error']);
+    if (allowed.has(code)) error.providerCode = code;
+    throw error;
+  }
   return response.json();
 }
 export async function collect(env, fetcher = fetch) {
