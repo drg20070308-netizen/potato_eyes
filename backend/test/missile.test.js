@@ -13,3 +13,7 @@ test('old, future, simulated and unrelated news are excluded', () => {
   assert.equal(detectMissileReport({ ...article, description: '모형 표적에 대한 가상 시연' }, now), null);
   assert.equal(detectMissileReport({ ...article, title: '우주 발사', description: '위성 소식' }, now), null);
 });
+
+test('drone exhibition mentioning missiles elsewhere is not a missile launch alert', () => {
+  assert.equal(detectMissileReport({ ...article, title: '北, 자폭드론 등 현대전 주력 무기 급성장', description: '전시회에서 무인기를 공개했다. 미사일 기술도 소개했다. 방사포를 발사했다.' }, now), null);
+});

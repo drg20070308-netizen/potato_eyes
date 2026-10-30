@@ -6,7 +6,10 @@ export function detectMissileReport(article, now = Date.now()) {
   const date = Date.parse(article.publishedAt);
   if (!Number.isFinite(date) || date > now || now - date > 6 * 3600000) return null;
   const text = `${article.title}. ${article.description}`;
-  if (!/북한|北/.test(text) || !/미사일|탄도탄/.test(text) || !/발사|쐈|낙하|떨어/.test(text)) return null;
+  if (!/북한|北/.test(text)) return null;
+  const launch = /(?:미사일|탄도탄)[^.!?。]{0,35}(?:발사|쐈|낙하|떨어)|(?:발사한|쏜)[^.!?。]{0,20}(?:미사일|탄도탄)/;
+  if (!launch.test(text)) return null;
+  if (/무인기|드론|전시회/.test(article.title) && !launch.test(article.title)) return null;
   // Search snippets cannot establish actual impact coordinates; quote a bounded passage only.
   if (/모형|모의|가상|시뮬레이션|발사하지|발사 안|발사설.*부인|오보/.test(text)) return null;
   const sentences = text.split(/(?<=[.!?。])\s+/);
@@ -20,7 +23,7 @@ export function detectMissileReport(article, now = Date.now()) {
 export function createMissileService({ env, file, fetcher = fetch, now = Date.now }) {
   let alerts = [], updatedAt = null, running = null, attempted = 0, failure = null;
   const interval = Math.max(5, Number(env.MISSILE_POLL_MINUTES) || 10) * 60000;
-  async function load() { try { const data = JSON.parse(await readFile(file, 'utf8')); if (Array.isArray(data.alerts)) { alerts = data.alerts; updatedAt = data.updatedAt; } } catch {} }
+  async function load() { try { const data = JSON.parse(await readFile(file, 'utf8')); if (Array.isArray(data.alerts)) { alerts = data.version === 2 ? data.alerts : []; updatedAt = data.version === 2 ? data.updatedAt : null; } } catch {} }
   async function refresh() {
     if (running) return running;
     if (!env.NAVER_CLIENT_ID || !env.NAVER_CLIENT_SECRET || (attempted && now() - attempted < interval)) return;
@@ -32,7 +35,7 @@ export function createMissileService({ env, file, fetcher = fetch, now = Date.no
         alerts = [...new Map([...incoming, ...alerts].map(a => [a.id, a])).values()].filter(a => now() - Date.parse(a.publishedAt) < 24 * 3600000).sort((a,b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, 30);
         updatedAt = new Date(now()).toISOString();
         await mkdir(new URL('./', file), { recursive: true });
-        await writeFile(new URL(`${file.href}.tmp`), JSON.stringify({ alerts, updatedAt })); await rename(new URL(`${file.href}.tmp`), file);
+        await writeFile(new URL(`${file.href}.tmp`), JSON.stringify({ version: 2, alerts, updatedAt })); await rename(new URL(`${file.href}.tmp`), file);
         failure = null;
       } catch (error) { failure = safeFailure(error); console.error('Missile report check failed', JSON.stringify(failure)); }
     })().finally(() => { running = null; }); return running;
