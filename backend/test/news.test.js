@@ -59,7 +59,7 @@ test('diagnostics exclude raw messages and credentials', async () => {
 
 test('Gemini request uses server key, structured output and rejects blocked results', async () => {
   const result = await summarize(normalize(item), env, async (url, options) => {
-    assert.equal(url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent');
+    assert.equal(url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent');
     assert.equal(options.headers['x-goog-api-key'], 'test');
     const request = JSON.parse(options.body);
     assert.equal(request.generationConfig.responseMimeType, 'application/json');

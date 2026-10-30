@@ -18,7 +18,7 @@ export function createNewsService({ env, file, fetcher = fetch }) {
         const old = new Map(snapshot.articles.map(a => [a.id, a]));
         // Sequential bounded batch prevents bursts and duplicate AI charges across app requests.
         for (const item of items) {
-          const hash = fingerprint(item, env.GEMINI_MODEL || 'gemini-2.5-flash-lite');
+          const hash = fingerprint(item, env.GEMINI_MODEL || 'gemini-3.5-flash-lite');
           const previous = old.get(item.id);
           if (previous?.fingerprint === hash) { articles.push({ ...previous, ...item }); continue; }
           try { articles.push({ ...item, summaryLines: await summarize(item, env, fetcher), summaryBasis: 'title_and_search_description', fingerprint: hash }); }

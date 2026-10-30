@@ -49,7 +49,7 @@ export async function collect(env, fetcher = fetch) {
   return [...new Map(data.items.map(normalize).filter(Boolean).map(a => [a.id, a])).values()].sort((a,b) => b.publishedAt.localeCompare(a.publishedAt));
 }
 export async function summarize(article, env, fetcher = fetch) {
-  const model = env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+  const model = env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
   if (!/^[a-zA-Z0-9.-]+$/.test(model)) throw new Error('INVALID_MODEL');
   const data = await fetchJson(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: 'POST', headers: { 'x-goog-api-key': env.GEMINI_API_KEY, 'Content-Type': 'application/json' },
